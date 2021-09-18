@@ -2,18 +2,31 @@
 
 namespace App\Entity;
 
-use App\Repository\CommentRepository;
+use App\Entity\Conference;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\CommentRepository;
 use ApiPlatform\Core\Annotation\ApiResource;
+use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=CommentRepository::class)
  * @ApiResource(
- *  shortName="commentaire",
- *  itemOperations={"get","put","patch"},
- *  normalizationContext={"groups"={"comment:read"}},
- *  denormalizationContext={"groups"={"comment:write"}}
+ * shortName="commentaire",
+ * collectionOperations={
+ *    "get"={"security"="is_granted('ROLE_ADMIN')"},
+ *    "post"},
+ * itemOperations={
+ *    "get"={"security"="is_granted('ROLE_USER')"},
+ *    "put",
+ *    "patch",
+ *    "delete"={"security"="is_granted('ROLE_ADMIN')"}},
+ * normalizationContext={"groups"={"comment:read"}},
+ * denormalizationContext={"groups"={"comment:write"}},
+ * attributes={
+ *  "pagination_items_per_page"=2,
+ *  "formats"={"jsonld","json","html","csv"={"text/csv"},"jsonhal"}
+ * }
  * )
  */
 class Comment
@@ -22,13 +35,20 @@ class Comment
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"comment:read","comment:write"})
+     * @Groups({"comment:read"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
      * @Groups({"comment:read","comment:write"})
+     * @Assert\NotBlank()
+     * @Assert\Length(
+     *  min=5,
+     *  minMessage="L'auteur doit contenir au moins 5 caractères",
+     *  max=50,
+     *  maxMessage="L'auteur doit contenir au plus 50 caractères"
+     * )
      */
     private $author;
 
@@ -41,6 +61,8 @@ class Comment
     /**
      * @ORM\Column(type="string", length=255)
      * @Groups({"comment:read","comment:write"})
+     * @Assert\Email()
+     * @Assert\NotBlank()
      */
     private $email;
 
@@ -52,6 +74,11 @@ class Comment
     /**
      * @ORM\Column(type="smallint", nullable=true)
      * @Groups({"comment:read","comment:write"})
+     * @Assert\Range(
+     *  min=1,
+     *  max=5,
+     *  notInRangeMessage="You must be between {{ min }} and {{ max }} to enter"
+     * )
      */
     private $note;
 
@@ -144,7 +171,7 @@ class Comment
     }
 
     /**
-     * @Groups({"comment:read","comment:write"})
+     * @Groups({"comment:read"})
      */
     public function getShorttext(): string
     {
@@ -155,7 +182,7 @@ class Comment
     }
 
     /**
-     * @Groups({"comment:read","comment:write"})
+     * @Groups({"comment:read"})
      */
     public function getAge(): string
     {

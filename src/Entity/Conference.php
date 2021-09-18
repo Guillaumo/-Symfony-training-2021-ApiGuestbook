@@ -15,7 +15,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 /**
  * @ORM\Entity(repositoryClass=ConferenceRepository::class)
  * @ApiResource(
- *  collectionOperations={"get"},
+ *  collectionOperations={"get","post"={"security"="is_granted('ROLE_ADMIN')"}},
  *  itemOperations={"get"}
  * )
  * @ApiFilter(BooleanFilter::class, properties={"isInternational"})
